@@ -1,0 +1,25 @@
+# Render Blueprint for the ThriftLoop backend
+# Docs: https://render.com/docs/blueprint-spec
+services:
+  - type: web
+    name: thriftloop-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 server.py
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.6
+      - key: THRIFTLOOP_ADMIN_EMAIL
+        sync: false
+      - key: THRIFTLOOP_ADMIN_PASSWORD
+        sync: false
+      # Persistent disk paths (see disk below). Remove these if you remove the disk.
+      - key: THRIFTLOOP_DATA_DIR
+        value: /var/data/db
+      - key: THRIFTLOOP_UPLOAD_DIR
+        value: /var/data/uploads
+    disk:
+      name: thriftloop-data
+      mountPath: /var/data
+      sizeGB: 1
