@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Product Details - ThriftLoop</title>
+    <link rel="stylesheet" href="../css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        .product-detail-page { padding: 100px 2rem 60px; max-width: 1100px; margin: 0 auto; }
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; margin-top: 2rem; }
+        .detail-image { width: 100%; border-radius: 16px; border: 1px solid rgba(255,110,199,0.3); }
+        .detail-info { display: flex; flex-direction: column; gap: 1.5rem; }
+        .detail-category { color: var(--baby-pink); text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.1em; }
+        .detail-title { font-size: 2rem; font-weight: 700; }
+        .detail-price { font-size: 2rem; color: var(--shocking-pink); font-weight: 700; }
+        .seller-card { background: var(--card-bg); padding: 1.5rem; border-radius: 16px; border: 1px solid rgba(255,110,199,0.2); display: flex; flex-direction: column; gap: 1rem; }
+        .seller-header { display: flex; align-items: center; gap: 1rem; }
+        .seller-avatar-detail { width: 60px; height: 60px; border-radius: 50%; background: linear-gradient(135deg, var(--shocking-pink), var(--violet)); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 700; overflow: hidden; }
+        .seller-avatar-detail img { width: 100%; height: 100%; object-fit: cover; }
+        .seller-meta { flex: 1; }
+        .seller-username { font-weight: 600; font-size: 1.1rem; }
+        .seller-points { color: var(--baby-pink); font-size: 0.9rem; }
+        .seller-badges { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .badge-pill { padding: 0.3rem 0.8rem; background: rgba(34, 197, 94, 0.15); color: #22c55e; border-radius: 20px; font-size: 0.8rem; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .info-item { background: var(--card-bg); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,110,199,0.2); }
+        .info-label { color: var(--text-gray); font-size: 0.85rem; }
+        .info-value { font-weight: 600; margin-top: 0.3rem; }
+        .action-buttons { display: flex; flex-direction: column; gap: 0.8rem; }
+        .btn-large { padding: 1rem; font-size: 1rem; justify-content: center; }
+        .back-link { color: var(--baby-pink); text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; }
+        .stock-info { background: rgba(255, 110, 199, 0.1); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255, 110, 199, 0.3); text-align: center; color: var(--baby-pink); }
+        .buy-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.8); display: none; align-items: center; justify-content: center; z-index: 3000; padding: 1rem; }
+        .buy-modal.active { display: flex; }
+        .buy-modal-content { background: var(--dark-bg); border: 1px solid var(--border-color); border-radius: 16px; width: 100%; max-width: 520px; max-height: 90vh; overflow: auto; }
+        .buy-modal-header { padding: 1.2rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; }
+        .buy-modal-body { padding: 1.5rem; display: flex; flex-direction: column; gap: 1rem; }
+        .pfp-reveal { display: flex; align-items: center; gap: 1rem; background: var(--card-bg); padding: 1rem; border-radius: 12px; border: 1px solid rgba(255,110,199,0.2); }
+        .pfp-reveal img, .pfp-reveal .placeholder-pfp { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; background: linear-gradient(135deg, var(--shocking-pink), var(--violet)); display: flex; align-items: center; justify-content: center; font-weight: 700; }
+        .review-section { margin-top: 2rem; background: var(--card-bg); border: 1px solid rgba(255,110,199,0.2); border-radius: 16px; padding: 1.5rem; }
+        .review-list { display: flex; flex-direction: column; gap: 1rem; margin: 1rem 0; }
+        .review-item { padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 12px; }
+        .review-stars { color: #fbbf24; margin-bottom: 0.3rem; }
+        .review-form { display: flex; flex-direction: column; gap: 0.8rem; margin-top: 1rem; }
+        .review-form select, .review-form textarea, .buy-modal-body input { width: 100%; padding: 0.8rem; border-radius: 10px; border: 1px solid var(--border-color); background: var(--card-bg); color: var(--text-light); font-family: inherit; }
+        @media (max-width: 968px) { .detail-grid { grid-template-columns: 1fr; gap: 2rem; } .info-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <nav class="navbar">
+            <div class="nav-container">
+                <div class="nav-logo">
+                    <h2><i class="fas fa-heart"></i> ThriftLoop</h2>
+                </div>
+                <ul class="nav-menu">
+                    <li class="nav-item"><a href="../index.html" class="nav-link">Home</a></li>
+                    <li class="nav-item"><a href="../index.html#products" class="nav-link">Shop</a></li>
+                </ul>
+                <div class="nav-actions">
+                    <button class="cart-btn" onclick="window.location.href='../index.html'"><i class="fas fa-shopping-bag"></i></button>
+                    <button class="btn-login" onclick="window.location.href='../index.html'">Login</button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="product-detail-page">
+        <a href="../index.html#products" class="back-link"><i class="fas fa-arrow-left"></i> Back to Collection</a>
+        <div class="detail-grid">
+            <div>
+                <img id="detailImage" src="" alt="" class="detail-image">
+            </div>
+            <div class="detail-info">
+                <div>
+                    <span class="detail-category" id="detailCategory"></span>
+                    <h1 class="detail-title" id="detailTitle"></h1>
+                    <p class="detail-price">₹<span id="detailPrice"></span></p>
+                </div>
+
+                <div class="stock-info">
+                    <i class="fas fa-box"></i> Only this piece available from seller's stock
+                </div>
+
+                <div class="seller-card">
+                    <div class="seller-header">
+                        <div class="seller-avatar-detail" id="sellerAvatar">T</div>
+                        <div class="seller-meta">
+                            <div class="seller-username" id="sellerUsername"></div>
+                            <div class="seller-points"><i class="fas fa-star"></i> <span id="sellerPoints"></span> Seller Points</div>
+                        </div>
+                    </div>
+                    <div class="seller-badges">
+                        <span class="badge-pill"><i class="fas fa-check-circle"></i> Verified Seller</span>
+                        <span class="badge-pill"><i class="fas fa-shield-alt"></i> ID Protected</span>
+                    </div>
+                    <div style="color: var(--text-gray); font-size: 0.9rem;">
+                        <i class="fas fa-info-circle"></i> Buyer's identity hidden. Seller details never shared publicly.
+                    </div>
+                </div>
+
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Condition</div>
+                        <div class="info-value" id="detailCondition"></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Delivery Type</div>
+                        <div class="info-value" id="detailDelivery"></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Seller ID</div>
+                        <div class="info-value" id="sellerId"></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Category</div>
+                        <div class="info-value" id="detailCat"></div>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button class="btn btn-primary btn-large" onclick="openBuyModal()">
+                        <i class="fas fa-bolt"></i> Buy Now
+                    </button>
+                    <button class="btn btn-secondary btn-large" onclick="addToCartDetail()">
+                        <i class="fas fa-shopping-bag"></i> Add to Bag
+                    </button>
+                </div>
+                <div class="stock-info" style="text-align:left;">
+                    <i class="fas fa-truck"></i> <strong>How delivery works:</strong> Seller hands over the parcel to ThriftLoop at their nearby handover point. We receive the packet and deliver it to your address.
+                </div>
+            </div>
+        </div>
+
+        <div class="review-section">
+            <h2><i class="fas fa-star"></i> Seller Reviews</h2>
+            <div id="reviewList" class="review-list"></div>
+            <div class="review-form">
+                <h3>Leave a review</h3>
+                <select id="reviewRating">
+                    <option value="5">5 - Excellent</option>
+                    <option value="4">4 - Good</option>
+                    <option value="3">3 - Okay</option>
+                    <option value="2">2 - Poor</option>
+                    <option value="1">1 - Bad</option>
+                </select>
+                <textarea id="reviewText" rows="3" placeholder="Share your experience with this seller..."></textarea>
+                <button class="btn btn-primary" onclick="submitReview()">Submit Review</button>
+            </div>
+        </div>
+
+        <div style="margin-top: 3rem;">
+            <h2 style="margin-bottom: 1.5rem;">More from this seller</h2>
+            <div class="products-grid" id="moreFromSeller"></div>
+        </div>
+    </main>
+
+    <!-- Buy Modal -->
+    <div id="buyModal" class="buy-modal">
+        <div class="buy-modal-content">
+            <div class="buy-modal-header">
+                <h3>Complete Purchase</h3>
+                <button onclick="closeBuyModal()" class="close-modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="buy-modal-body">
+                <div class="pfp-reveal">
+                    <div id="modalSellerPfp" class="placeholder-pfp">S</div>
+                    <div>
+                        <p style="font-weight:600;">Seller Profile (visible once)</p>
+                        <p id="modalSellerName" style="color:var(--text-gray); font-size:0.9rem;"></p>
+                        <p style="font-size:0.85rem; color:var(--baby-pink);">You can view seller's pfp once while buying</p>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Your Delivery Address <span style="color:#ff6ec7">*</span></label>
+                    <textarea id="deliveryAddress" rows="3" placeholder="Enter your full delivery address (house/flat, area, city, pincode)"></textarea>
+                    <small style="color:var(--text-gray);">ThriftLoop will receive the packet from the seller and deliver it to this address.</small>
+                </div>
+                <div class="form-group">
+                    <label>Preferred Delivery Time</label>
+                    <select id="deliveryTime">
+                        <option value="morning">Morning (9AM - 12PM)</option>
+                        <option value="afternoon">Afternoon (12PM - 4PM)</option>
+                        <option value="evening">Evening (4PM - 8PM)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Phone Number (for delivery coordination) <span style="color:#ff6ec7">*</span></label>
+                    <input type="tel" id="buyerPhone" placeholder="+91 XXXXX XXXXX">
+                </div>
+                <div class="form-group">
+                    <label>Notes (optional)</label>
+                    <textarea id="buyerNote" rows="2" placeholder="Any delivery instructions..."></textarea>
+                </div>
+                <p style="color:var(--text-gray); font-size:0.9rem;"><i class="fas fa-info-circle"></i> Seller will hand over the order to ThriftLoop at a nearby location. We deliver it to you. Payment gateway coming later.</p>
+                <button class="btn btn-primary btn-large" onclick="confirmPurchase()">Confirm Order Request</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../js/app.js"></script>
+    <script>
+        let currentProduct = null;
+
+        function getReviews(sellerId) {
+            const all = JSON.parse(localStorage.getItem('thriftloop_reviews') || '{}');
+            return all[sellerId] || [];
+        }
+
+        function renderReviews(sellerId) {
+            const list = document.getElementById('reviewList');
+            const reviews = getReviews(sellerId);
+            if (!reviews.length) {
+                list.innerHTML = '<p style="color:var(--text-gray);">No reviews yet. Be the first to review this seller.</p>';
+                return;
+            }
+            list.innerHTML = reviews.map(r => `
+                <div class="review-item">
+                    <div class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
+                    <p>${r.text}</p>
+                    <p style="color:var(--text-gray); font-size:0.85rem; margin-top:0.3rem;">- ${r.by} • ${r.date}</p>
+                </div>
+            `).join('');
+        }
+
+        function submitReview() {
+            if (!currentProduct) return;
+            const rating = parseInt(document.getElementById('reviewRating').value);
+            const text = document.getElementById('reviewText').value.trim();
+            if (!text) { alert('Please write a review'); return; }
+            const all = JSON.parse(localStorage.getItem('thriftloop_reviews') || '{}');
+            const key = currentProduct.sellerId;
+            if (!all[key]) all[key] = [];
+            all[key].unshift({ rating, text, by: 'Buyer', date: new Date().toLocaleDateString() });
+            localStorage.setItem('thriftloop_reviews', JSON.stringify(all));
+            document.getElementById('reviewText').value = '';
+            renderReviews(key);
+            alert('Review submitted!');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const productData = localStorage.getItem('thriftloop_view_product');
+            if (!productData) {
+                window.location.href = '../index.html';
+                return;
+            }
+            const product = JSON.parse(productData);
+            currentProduct = product;
+            
+            document.getElementById('detailImage').src = product.image.startsWith('http') ? product.image : '../' + product.image;
+            document.getElementById('detailImage').alt = product.name;
+            document.getElementById('detailCategory').textContent = product.category;
+            document.getElementById('detailTitle').textContent = product.name;
+            document.getElementById('detailPrice').textContent = product.price;
+            document.getElementById('sellerUsername').textContent = product.seller;
+            document.getElementById('sellerPoints').textContent = product.sellerPoints;
+            document.getElementById('sellerAvatar').textContent = product.seller.charAt(0).toUpperCase();
+            document.getElementById('detailCondition').textContent = product.condition || 'Good';
+            document.getElementById('detailDelivery').textContent = product.deliveryType || 'Pickup/Delivery';
+            document.getElementById('sellerId').textContent = product.sellerId || 'N/A';
+            document.getElementById('detailCat').textContent = product.category;
+            
+            renderReviews(product.sellerId);
+
+            // Show more from same seller
+            const moreGrid = document.getElementById('moreFromSeller');
+            if (typeof products !== 'undefined') {
+                products.filter(p => p.sellerId === product.sellerId && p.id !== product.id).slice(0, 4).forEach(p => {
+                    const card = document.createElement('div');
+                    card.className = 'product-card';
+                    card.style.cursor = 'pointer';
+                    card.onclick = () => {
+                        localStorage.setItem('thriftloop_view_product', JSON.stringify(p));
+                        location.reload();
+                    };
+                    card.innerHTML = `
+                        <img src="${p.image.startsWith('http') ? p.image : '../' + p.image}" class="product-image">
+                        <div class="product-info">
+                            <h3 class="product-name">${p.name}</h3>
+                            <p class="product-price">₹${p.price}</p>
+                        </div>
+                    `;
+                    moreGrid.appendChild(card);
+                });
+            }
+        });
+        
+        function openBuyModal() {
+            if (!currentProduct) return;
+            document.getElementById('modalSellerName').textContent = currentProduct.seller + ' (' + currentProduct.sellerId + ')';
+            const pfp = document.getElementById('modalSellerPfp');
+            // pfp reveal once - if seller has image show it, else show placeholder
+            if (currentProduct.sellerPfp) {
+                pfp.innerHTML = '<img src="' + (currentProduct.sellerPfp.startsWith('http') ? currentProduct.sellerPfp : '../' + currentProduct.sellerPfp) + '" alt="Seller">';
+            } else {
+                pfp.textContent = currentProduct.seller.charAt(0).toUpperCase();
+            }
+            document.getElementById('buyModal').classList.add('active');
+            localStorage.setItem('thriftloop_pfp_viewed_' + currentProduct.sellerId, '1');
+        }
+
+        function closeBuyModal() {
+            document.getElementById('buyModal').classList.remove('active');
+        }
+
+        function confirmPurchase() {
+            const deliveryAddress = document.getElementById('deliveryAddress').value.trim();
+            const buyerPhone = document.getElementById('buyerPhone').value.trim();
+            if (!deliveryAddress) { alert('Please enter your delivery address'); return; }
+            if (!buyerPhone) { alert('Please enter your phone number for delivery coordination'); return; }
+            const deliveryTime = document.getElementById('deliveryTime').value;
+            const note = document.getElementById('buyerNote').value.trim();
+
+            // Save demo order for coordination flow
+            const orders = JSON.parse(localStorage.getItem('thriftloop_orders') || '[]');
+            orders.unshift({
+                id: 'ORD-' + Date.now().toString().slice(-6),
+                productId: currentProduct?.id,
+                productName: currentProduct?.name,
+                sellerId: currentProduct?.sellerId,
+                sellerName: currentProduct?.seller,
+                buyerDeliveryAddress: deliveryAddress,
+                buyerPhone,
+                deliveryTime,
+                note,
+                status: 'Requested - Awaiting Seller Handover',
+                createdAt: new Date().toISOString()
+            });
+            localStorage.setItem('thriftloop_orders', JSON.stringify(orders));
+
+            alert('Order request confirmed!\n\nDelivery to: ' + deliveryAddress + '\nPreferred time: ' + deliveryTime + '\n\nSeller will hand over the parcel to ThriftLoop at their nearby handover location. We will receive it and deliver to you.');
+            closeBuyModal();
+        }
+        
+        function addToCartDetail() {
+            const productData = localStorage.getItem('thriftloop_view_product');
+            const product = JSON.parse(productData);
+            if (typeof addToCart === 'function') addToCart(product.id);
+        }
+    </script>
+</body>
+</html>

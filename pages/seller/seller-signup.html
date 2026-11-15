@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Become a Seller | ThriftLoop</title>
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="seller-signup.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+    <header class="signup-header">
+        <div class="signup-header-container">
+            <div class="nav-logo">
+                <h2><i class="fas fa-heart"></i> ThriftLoop</h2>
+            </div>
+            <a href="../../index.html" class="back-home"><i class="fas fa-arrow-left"></i> Back to Home</a>
+        </div>
+    </header>
+
+    <main class="signup-main">
+        <div class="signup-container">
+            <div id="inviteGateMessage" class="signup-card" style="display:none; text-align:center; padding:2rem;">
+                <h2 style="margin-bottom:0.5rem;">Invite Required</h2>
+                <p style="color:var(--text-gray, #b8a9c9); margin-bottom:1rem;">This seller signup page is private. You need a valid invite link from the ThriftLoop admin to create a seller account.</p>
+                <p style="color:var(--text-gray, #b8a9c9); font-size:0.9rem;">If you received a link, make sure you opened it exactly as shared.</p>
+                <a href="../../index.html" class="btn btn-primary" style="display:inline-flex; margin-top:1.2rem;">Back to Home</a>
+            </div>
+            <div id="sellerSignupContent">
+            <div class="signup-hero">
+                <h1>Become a <span class="gradient-text">ThriftLoop Seller</span></h1>
+                <p>Create your seller account with your real details. Buyer identities remain private on the platform.</p>
+                <div class="privacy-pill">
+                    <i class="fas fa-shield-alt"></i>
+                    <span>Admin-verified seller onboarding</span>
+                </div>
+            </div>
+
+            <div class="signup-card">
+                <div class="step-indicator">
+                    <div class="step active" data-step="1">
+                        <div class="step-circle">1</div>
+                        <p>Seller Details</p>
+                    </div>
+                    <div class="step-line"></div>
+                    <div class="step" data-step="2">
+                        <div class="step-circle">2</div>
+                        <p>Photo & Confirm</p>
+                    </div>
+                </div>
+
+                <!-- STEP 1 -->
+                <div class="step-content active" id="step-1">
+                    <div class="step-header">
+                        <h2><i class="fas fa-id-card"></i> Seller Details</h2>
+                        <p>Enter your real details. <strong>Nationality must be Indian.</strong></p>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Real Full Name <span class="required">*</span></label>
+                            <input type="text" id="sellerFullName" placeholder="Enter your real full name" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number <span class="required">*</span></label>
+                            <input type="tel" id="sellerPhone" placeholder="+91 XXXXX XXXXX" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Email Address <span class="required">*</span></label>
+                            <input type="email" id="sellerEmail" placeholder="example@gmail.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Create Password <span class="required">*</span></label>
+                            <input type="password" id="sellerPassword" placeholder="Create a strong password" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>City <span class="required">*</span></label>
+                            <input type="text" id="sellerCity" placeholder="Your city" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Nationality <span class="required">*</span></label>
+                            <input type="text" id="sellerNationality" value="Indian" readonly required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Nearby Handover Address <span class="required">*</span></label>
+                        <textarea id="sellerHandoverAddress" rows="2" placeholder="Nearby address/landmark where you can hand over the parcel to ThriftLoop team" required></textarea>
+                        <small style="color: var(--text-gray, #b8a9c9); display:block; margin-top:0.4rem;">When an order is placed, you will hand over the packet to us at this nearby location. We will deliver it to the customer.</small>
+                    </div>
+
+                    <div class="step-actions">
+                        <button class="btn btn-primary" onclick="nextStep(1)">
+                            Continue to Photo <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- STEP 2 -->
+                <div class="step-content" id="step-2">
+                    <div class="step-header">
+                        <h2><i class="fas fa-camera"></i> Your Photo</h2>
+                        <p>Upload your real photo for seller verification. <strong>Photo is required.</strong></p>
+                    </div>
+
+                    <div class="pfp-options" style="grid-template-columns: 1fr;">
+                        <label class="pfp-card" for="pfpUpload" style="cursor: default;">
+                            <input type="radio" name="pfpChoice" id="pfpUpload" value="upload" checked style="display:none;">
+                            <div class="pfp-card-content">
+                                <div class="pfp-icon">
+                                    <i class="fas fa-image"></i>
+                                </div>
+                                <h3>Upload your real photo <span class="required">*</span></h3>
+                                <p>Use a clear, real photo of yourself.</p>
+                                <div class="upload-area">
+                                    <input type="file" id="pfpFile" accept="image/*" onchange="previewPfp(event)">
+                                    <div class="upload-preview" id="uploadPreview">
+                                        <i class="fas fa-cloud-upload-alt"></i>
+                                        <span>Click to upload image</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="final-note">
+                        <i class="fas fa-lock"></i>
+                        <p>Your real details are used for verification and order handover coordination. Delivery to buyers is handled by ThriftLoop (we collect from your nearby handover address and deliver to the customer).</p>
+                    </div>
+
+                    <div class="step-actions split">
+                        <button class="btn btn-secondary" onclick="prevStep(2)">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </button>
+                        <button class="btn btn-primary" onclick="completeSignup()">
+                            <i class="fas fa-check-circle"></i> Create Seller Account
+                        </button>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="../../js/config.js"></script>
+    <script src="../../js/api.js"></script>
+    <script src="seller-onboard.js"></script>
+</body>
+
+</html>
