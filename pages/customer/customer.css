@@ -1,0 +1,208 @@
+/* Customer Dashboard Styles */
+.customer-badge {
+    background: var(--pink-blush);
+    color: var(--ink);
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.customer-info {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    background: var(--card-bg);
+    padding: 0.5rem 1rem;
+    border-radius: 25px;
+    border: 1px solid var(--border-color);
+}
+
+.customer-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--pink-blush);
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.2rem;
+}
+
+.customer-name {
+    font-weight: 600;
+}
+
+.customer-email {
+    font-size: 0.8rem;
+    color: var(--text-gray);
+}
+
+/* Profile Form */
+.profile-form {
+    padding: 1.5rem;
+}
+
+/* Privacy Info */
+.privacy-info {
+    padding: 1rem;
+    background: var(--surface-soft);
+    border-radius: 10px;
+    border: 1px solid var(--border-color);
+    margin-bottom: 1.5rem;
+}
+
+.privacy-info p {
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--pink-berry);
+}
+
+/* Orders Full List */
+.orders-list-full {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.order-card {
+    background: var(--card-bg);
+    border-radius: 15px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.order-card-header {
+    padding: 1.5rem;
+    background: var(--surface-soft);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.order-basic-info h4 {
+    color: var(--pink-berry);
+    margin-bottom: 0.3rem;
+}
+
+.order-date {
+    color: var(--text-gray);
+    font-size: 0.9rem;
+}
+
+.order-card-body {
+    padding: 1.5rem;
+}
+
+.order-product-info {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.order-product-info img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 10px;
+}
+
+.product-details h5 {
+    font-size: 1.1rem;
+    margin-bottom: 0.3rem;
+}
+
+.product-details p {
+    color: var(--text-gray);
+    margin-bottom: 0.2rem;
+}
+
+.product-details .product-price {
+    color: var(--pink-berry);
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin-top: 0.5rem;
+}
+
+.order-tracking {
+    background: var(--surface-soft);
+    padding: 1rem;
+    border-radius: 10px;
+}
+
+.order-tracking p {
+    margin-bottom: 0.3rem;
+}
+
+/* Wishlist */
+.wishlist-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-wishlist-remove {
+    background: var(--danger);
+    border: none;
+    color: var(--cream);
+    padding: 0.7rem;
+    border-radius: 10px;
+    cursor: pointer;
+    width: 45px;
+}
+
+/* Addresses */
+.addresses-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.5rem;
+}
+
+.address-card {
+    background: var(--card-bg);
+    border-radius: 15px;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.address-header {
+    padding: 1rem 1.5rem;
+    background: var(--surface-soft);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.default-badge {
+    background: rgba(63, 122, 82, 0.1);
+    color: var(--success);
+    padding: 0.2rem 0.6rem;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.address-body {
+    padding: 1.5rem;
+}
+
+.address-body p {
+    margin-bottom: 0.3rem;
+}
+
+.address-actions {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    gap: 0.5rem;
+}

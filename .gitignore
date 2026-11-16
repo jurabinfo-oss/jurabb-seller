@@ -1,0 +1,9 @@
+# Local data / uploads (do not commit)
+backend/data/
+backend/uploads/
+backend/__pycache__/
+**/__pycache__/
+
+# Build artifacts
+*.zip
+.DS_Store
