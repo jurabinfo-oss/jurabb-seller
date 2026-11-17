@@ -67,7 +67,8 @@ python3 server.py
 See `backend/README.md` for the full API list.
 
 ### Frontend ↔ backend
-- `js/config.js` sets `window.THRIFTLOOP_API_BASE` (default `http://localhost:3001`).
+- `js/config.js` sets `window.THRIFTLOOP_API_BASE`.
+- Production backend: `https://jurabb-seller.onrender.com`. For local work, use `http://localhost:3001`.
 - `js/api.js` provides a small fetch wrapper + Bearer token helpers.
 - Admin invites and seller signup use the backend when reachable and fall back to
   the offline `localStorage` demo when the backend is not reachable.
