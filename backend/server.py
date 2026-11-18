@@ -95,14 +95,21 @@ def require_role(handler, roles):
 def ensure_admin_user():
     conn = get_conn()
     cur = conn.cursor()
-    cur.execute("SELECT id FROM users WHERE email = ?", (ADMIN_EMAIL.lower(),))
+    cur.execute("SELECT id, role FROM users WHERE email = ?", (ADMIN_EMAIL.lower(),))
     row = cur.fetchone()
     if not row:
         cur.execute(
             "INSERT INTO users (email,password_hash,role,name,created_at) VALUES (?,?,?,?,?)",
             (ADMIN_EMAIL.lower(), hash_password(ADMIN_PASSWORD), "admin", "Admin", now_iso()),
         )
-        conn.commit()
+    else:
+        # The env var is authoritative, so changing THRIFTLOOP_ADMIN_PASSWORD
+        # in the host (e.g. Render) actually resets the admin password.
+        cur.execute(
+            "UPDATE users SET password_hash = ?, role = 'admin' WHERE id = ?",
+            (hash_password(ADMIN_PASSWORD), row["id"]),
+        )
+    conn.commit()
     conn.close()
 
 
