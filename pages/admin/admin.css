@@ -239,3 +239,26 @@ input:checked + .slider:before {
 }
 .invite-info-box p { margin: 0; display: flex; gap: 0.6rem; align-items: flex-start; }
 .invite-info-box i { color: var(--baby-pink, #ffbde6); margin-top: 0.15rem; }
+
+/* Empty states / loading notes */
+.empty-note {
+    color: var(--text-gray);
+    font-size: 0.95rem;
+    padding: 1rem 0;
+    margin: 0;
+}
+.empty-note-cell {
+    text-align: center !important;
+    color: var(--text-gray);
+    padding: 1.5rem 1rem !important;
+}
+
+.invite-link-input {
+    width: 100%;
+    min-width: 260px;
+    padding: 0.4rem 0.6rem;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--surface-soft);
+    color: var(--text-light);
+}

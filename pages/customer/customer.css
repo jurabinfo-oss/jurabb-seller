@@ -206,3 +206,11 @@
     display: flex;
     gap: 0.5rem;
 }
+
+/* Empty states (real data only) */
+.empty-note {
+    color: var(--text-gray);
+    font-size: 0.95rem;
+    padding: 1rem 0;
+    margin: 0;
+}

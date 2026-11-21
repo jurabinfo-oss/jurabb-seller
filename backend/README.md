@@ -61,20 +61,21 @@ Data is stored in `backend/data/thriftloop.db`. Uploaded photos go to `backend/u
 ### Uploads
 - `GET /uploads/<filename>` serves uploaded seller/product images
 
+## Admin / seller list endpoints
+- `GET /api/admin/summary`, `/api/admin/users`, `/api/admin/sellers`, `/api/admin/products`
+- `GET /api/seller/products` (own listings)
+- `POST /api/seller/products` (multipart: name, category, price, condition, description, image)
+- `POST /api/seller/products/:id/status` `{ status: active|sold|hidden }`
+
 ## Still to build/extend
-- Product create/edit/delete APIs for sellers + image upload
-- Admin seller verification/approval workflow and moderation
-- Stronger validation, pagination, search/filters
-- Enforce review eligibility (only after delivered order), prevent duplicates
+- Seller verification/approval workflow and moderation
+- Pagination, search and filters
+- Review eligibility (only after a delivered order) and duplicate prevention
 - Payment gateway integration + webhooks
 - Notifications (email/SMS/WhatsApp)
-- Production hardening (HTTPS, secure CORS origins, rate limits, better session storage, audit logs)
-- Frontend integration: replace `localStorage` flows with these APIs
+- Production hardening (restrict CORS origins, rate limits, structured session storage, audit logs)
 
 ## Frontend integration notes
-- Point frontend API base to backend URL (e.g. `http://localhost:3001` in dev, deployed backend URL in prod).
+- Point `js/config.js` to the deployed backend URL.
 - Send `Authorization: Bearer <token>` after login.
-- Update admin invite UI to call `/api/admin/invites` and use returned token.
-- Update seller signup to POST multipart form to `/api/seller/signup` with invite token.
-- Update buy flow to POST `/api/orders` with customer delivery address/phone.
-- Use `/uploads/...` URLs for seller/product photos.
+- All UI lists come from the API; there are no generated demo records.

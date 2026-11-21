@@ -264,15 +264,110 @@ class Handler(BaseHTTPRequestHandler):
                 return
             conn = get_conn()
             cur = conn.cursor()
+            base = """
+                SELECT o.*, p.name AS product_name, sp.seller_code
+                FROM orders o
+                LEFT JOIN products p ON p.id = o.product_id
+                LEFT JOIN seller_profiles sp ON sp.user_id = o.seller_user_id
+            """
             if user["role"] == "admin":
-                cur.execute("SELECT * FROM orders ORDER BY created_at DESC")
+                cur.execute(base + " ORDER BY o.created_at DESC")
             elif user["role"] == "seller":
-                cur.execute("SELECT * FROM orders WHERE seller_user_id = ? ORDER BY created_at DESC", (user["id"],))
+                cur.execute(base + " WHERE o.seller_user_id = ? ORDER BY o.created_at DESC", (user["id"],))
             else:
-                cur.execute("SELECT * FROM orders WHERE buyer_user_id = ? ORDER BY created_at DESC", (user["id"],))
+                cur.execute(base + " WHERE o.buyer_user_id = ? ORDER BY o.created_at DESC", (user["id"],))
             rows = [dict(r) for r in cur.fetchall()]
             conn.close()
             return json_response(self, 200, {"orders": rows})
+
+        if path == "/api/admin/summary":
+            user = require_role(self, ["admin"])
+            if not user:
+                return
+            conn = get_conn()
+            cur = conn.cursor()
+            cur.execute("SELECT COUNT(*) AS n FROM users WHERE role='customer'")
+            customers = cur.fetchone()["n"]
+            cur.execute("SELECT COUNT(*) AS n FROM seller_profiles")
+            sellers = cur.fetchone()["n"]
+            cur.execute("SELECT COUNT(*) AS n FROM products WHERE status='active'")
+            active_products = cur.fetchone()["n"]
+            cur.execute("SELECT COALESCE(SUM(amount),0) AS total FROM orders")
+            order_value = cur.fetchone()["total"]
+            cur.execute("""
+                SELECT o.*, p.name AS product_name, sp.seller_code
+                FROM orders o
+                LEFT JOIN products p ON p.id=o.product_id
+                LEFT JOIN seller_profiles sp ON sp.user_id=o.seller_user_id
+                ORDER BY o.created_at DESC LIMIT 5
+            """)
+            recent_orders = [dict(r) for r in cur.fetchall()]
+            cur.execute("SELECT * FROM seller_profiles ORDER BY created_at DESC LIMIT 5")
+            new_sellers = [dict(r) for r in cur.fetchall()]
+            conn.close()
+            return json_response(self, 200, {
+                "summary": {
+                    "customers": customers,
+                    "sellers": sellers,
+                    "active_products": active_products,
+                    "order_value": order_value,
+                },
+                "recent_orders": recent_orders,
+                "new_sellers": new_sellers,
+            })
+
+        if path == "/api/admin/users":
+            user = require_role(self, ["admin"])
+            if not user:
+                return
+            conn = get_conn()
+            cur = conn.cursor()
+            cur.execute("SELECT id,email,role,name,created_at FROM users ORDER BY created_at DESC")
+            rows = [dict(r) for r in cur.fetchall()]
+            conn.close()
+            return json_response(self, 200, {"users": rows})
+
+        if path == "/api/admin/sellers":
+            user = require_role(self, ["admin"])
+            if not user:
+                return
+            conn = get_conn()
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT sp.*,
+                    (SELECT COUNT(*) FROM products p WHERE p.seller_user_id = sp.user_id) AS product_count,
+                    (SELECT COUNT(*) FROM orders o WHERE o.seller_user_id = sp.user_id) AS order_count
+                FROM seller_profiles sp ORDER BY sp.created_at DESC
+            """)
+            rows = [dict(r) for r in cur.fetchall()]
+            conn.close()
+            return json_response(self, 200, {"sellers": rows})
+
+        if path == "/api/admin/products":
+            user = require_role(self, ["admin"])
+            if not user:
+                return
+            conn = get_conn()
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT p.*, sp.seller_code, sp.full_name AS seller_name
+                FROM products p LEFT JOIN seller_profiles sp ON sp.user_id = p.seller_user_id
+                ORDER BY p.created_at DESC
+            """)
+            rows = [dict(r) for r in cur.fetchall()]
+            conn.close()
+            return json_response(self, 200, {"products": rows})
+
+        if path == "/api/seller/products":
+            user = require_role(self, ["seller"])
+            if not user:
+                return
+            conn = get_conn()
+            cur = conn.cursor()
+            cur.execute("SELECT * FROM products WHERE seller_user_id = ? ORDER BY created_at DESC", (user["id"],))
+            rows = [dict(r) for r in cur.fetchall()]
+            conn.close()
+            return json_response(self, 200, {"products": rows})
 
         if m := re.match(r"^/api/sellers/(\d+)/reviews$", path):
             sid = int(m.group(1))
@@ -531,6 +626,64 @@ class Handler(BaseHTTPRequestHandler):
             rev = dict(cur.fetchone())
             conn.close()
             return json_response(self, 201, {"review": rev})
+
+        if path == "/api/seller/products":
+            user = require_role(self, ["seller"])
+            if not user:
+                return
+            ctype = self.headers.get("Content-Type", "")
+            if "multipart/form-data" not in ctype:
+                return json_response(self, 400, {"error": "Expected multipart/form-data"})
+            fields, files = parse_multipart(self)
+            name = (fields.get("name") or "").strip()
+            category = (fields.get("category") or "").strip().lower()
+            price_raw = (fields.get("price") or "").strip()
+            condition = (fields.get("condition") or "").strip()
+            description = (fields.get("description") or "").strip()
+            allowed = {"kurtis", "socks", "panties", "bra", "suit", "underwear"}
+            try:
+                price = float(price_raw)
+            except (TypeError, ValueError):
+                return json_response(self, 400, {"error": "Valid price required"})
+            if not name or category not in allowed or price <= 0:
+                return json_response(self, 400, {"error": "Name, valid category and price required"})
+            image = files.get("image")
+            image_path = save_upload_bytes(image["data"], image["filename"], prefix="product") if image else None
+            conn = get_conn()
+            cur = conn.cursor()
+            cur.execute(
+                """INSERT INTO products (seller_user_id,name,category,price,condition,description,image_path,status,created_at)
+                   VALUES (?,?,?,?,?,?,?,?,?)""",
+                (user["id"], name, category, price, condition or None, description or None,
+                 image_path, "active", now_iso()),
+            )
+            conn.commit()
+            pid = cur.lastrowid
+            cur.execute("SELECT * FROM products WHERE id=?", (pid,))
+            product = dict(cur.fetchone())
+            conn.close()
+            return json_response(self, 201, {"product": product})
+
+        if m := re.match(r"^/api/seller/products/(\d+)/status$", path):
+            user = require_role(self, ["seller"])
+            if not user:
+                return
+            pid = int(m.group(1))
+            data = read_json(self)
+            status = (data.get("status") or "").strip().lower()
+            if status not in {"active", "sold", "hidden"}:
+                return json_response(self, 400, {"error": "Invalid status"})
+            conn = get_conn()
+            cur = conn.cursor()
+            cur.execute("UPDATE products SET status=? WHERE id=? AND seller_user_id=?", (status, pid, user["id"]))
+            if cur.rowcount == 0:
+                conn.close()
+                return json_response(self, 404, {"error": "Product not found"})
+            conn.commit()
+            cur.execute("SELECT * FROM products WHERE id=?", (pid,))
+            product = dict(cur.fetchone())
+            conn.close()
+            return json_response(self, 200, {"product": product})
 
         return json_response(self, 404, {"error": "Not found"})
 

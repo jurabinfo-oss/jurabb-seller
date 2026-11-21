@@ -60,7 +60,8 @@ python3 server.py
 
 - API: `http://localhost:3001`
 - Admin (auto-created on first run): `admin@thriftloop.com` / `admin123`
-  (override with `THRIFTLOOP_ADMIN_EMAIL` / `THRIFTLOOP_ADMIN_PASSWORD`)
+  (override with `THRIFTLOOP_ADMIN_EMAIL` / `THRIFTLOOP_ADMIN_PASSWORD`; the env value
+  also resets the password on restart)
 - Data: `backend/data/thriftloop.db`
 - Uploaded seller photos: `backend/uploads/`
 
@@ -70,8 +71,9 @@ See `backend/README.md` for the full API list.
 - `js/config.js` sets `window.THRIFTLOOP_API_BASE`.
 - Production backend: `https://jurabb-seller.onrender.com`. For local work, use `http://localhost:3001`.
 - `js/api.js` provides a small fetch wrapper + Bearer token helpers.
-- Admin invites and seller signup use the backend when reachable and fall back to
-  the offline `localStorage` demo when the backend is not reachable.
+- All dashboards, products, orders, reviews and invites are read from the backend.
+  There are no generated/demo products, sellers, orders or statistics. Empty tables
+  simply show "No data yet".
 
 ## Getting Started
 
@@ -108,10 +110,11 @@ SweetSite/
 └── README.md
 ```
 
-## Demo Credentials (for testing)
-- **Admin**: Use Admin tab in login modal
-- **Seller**: Use Seller tab in login modal  
-- **Customer**: Use Customer tab in login modal
+## Accounts
+- **Admin**: created on first backend run (defaults to `admin@thriftloop.com` / `admin123`
+  unless overridden by environment variables)
+- **Seller**: invite-only. Admin generates a single-use link from Seller Invites.
+- **Customer**: buyers create their own account from the login modal.
 
 ## Design Highlights
 - **Clean Light Theme** - Bright white background with blush and berry-pink accents

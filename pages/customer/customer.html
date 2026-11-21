@@ -12,38 +12,21 @@
 </head>
 <body>
     <div class="dashboard-container">
-        <!-- Sidebar -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <h2><i class="fas fa-heart"></i> ThriftLoop</h2>
                 <p class="customer-badge"><i class="fas fa-user"></i> My Account</p>
             </div>
             <nav class="sidebar-nav">
-                <a href="#profile" class="nav-item active" onclick="showSection('profile')">
-                    <i class="fas fa-user-circle"></i> Profile
-                </a>
-                <a href="#orders" class="nav-item" onclick="showSection('orders')">
-                    <i class="fas fa-shopping-bag"></i> My Orders
-                    <span class="badge">2</span>
-                </a>
-                <a href="#wishlist" class="nav-item" onclick="showSection('wishlist')">
-                    <i class="fas fa-heart"></i> Wishlist
-                </a>
-                <a href="#addresses" class="nav-item" onclick="showSection('addresses')">
-                    <i class="fas fa-map-marker-alt"></i> Addresses
-                </a>
-                <a href="#shop" class="nav-item" onclick="window.location.href='../../index.html#products'">
-                    <i class="fas fa-store"></i> Continue Shopping
-                </a>
+                <a href="#profile" class="nav-item active" onclick="showSection('profile')"><i class="fas fa-user-circle"></i> Profile</a>
+                <a href="#orders" class="nav-item" onclick="showSection('orders')"><i class="fas fa-shopping-bag"></i> My Orders <span class="badge" id="ordersBadge">0</span></a>
+                <a href="#shop" class="nav-item" onclick="window.location.href='../../index.html#products'"><i class="fas fa-store"></i> Continue Shopping</a>
             </nav>
             <div class="sidebar-footer">
-                <a href="../../index.html" class="logout-btn">
-                    <i class="fas fa-sign-out-alt"></i> Back to Home
-                </a>
+                <a href="../../index.html" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Back to Home</a>
             </div>
         </aside>
 
-        <!-- Main Content -->
         <main class="main-content">
             <header class="dashboard-header">
                 <div class="header-left">
@@ -52,175 +35,40 @@
                 </div>
                 <div class="header-right">
                     <div class="customer-info">
-                        <div class="customer-avatar">C</div>
+                        <div class="customer-avatar" id="headerAvatar">C</div>
                         <div class="customer-details">
-                            <p class="customer-name">Shopper</p>
-                            <p class="customer-email">customer@thriftloop.demo</p>
+                            <p class="customer-name" id="headerName">Buyer</p>
+                            <p class="customer-email" id="headerEmail">-</p>
                         </div>
                     </div>
                 </div>
             </header>
 
-            <!-- Profile Section -->
             <section id="profile" class="content-section active">
-                <div class="dashboard-grid">
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3><i class="fas fa-user"></i> Personal Information</h3>
+                <div class="dashboard-card">
+                    <div class="card-header"><h3><i class="fas fa-user"></i> Personal Information</h3></div>
+                    <div class="profile-form">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="profileName" readonly>
                         </div>
-                        <div class="profile-form">
-                            <div class="form-row">
-                                <div class="form-group">
-                                    <label>Full Name</label>
-                                    <input type="text" value="Jane Doe">
-                                </div>
-                                <div class="form-group">
-                                    <label>Phone Number</label>
-                                    <input type="tel" value="+91 98765 43210">
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label>Email Address</label>
-                                <input type="email" value="customer@thriftloop.demo">
-                            </div>
-                            <button class="btn btn-primary">Update Profile</button>
-                        </div>
-                    </div>
-                    <div class="dashboard-card">
-                        <div class="card-header">
-                            <h3><i class="fas fa-shield-alt"></i> Privacy & Security</h3>
-                        </div>
-                        <div class="settings-form">
-                            <div class="privacy-info">
-                                <p><i class="fas fa-eye-slash"></i> Your identity is anonymous to sellers</p>
-                                <p><i class="fas fa-lock"></i> Sellers only see your order details</p>
-                                <p><i class="fas fa-user-secret"></i> Admin can view for platform safety</p>
-                            </div>
-                            <div class="form-group">
-                                <label>Change Password</label>
-                                <input type="password" placeholder="Current Password">
-                            </div>
-                            <div class="form-group">
-                                <input type="password" placeholder="New Password">
-                            </div>
-                            <button class="btn btn-primary">Change Password</button>
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <input type="email" id="profileEmail" readonly>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Orders Section -->
             <section id="orders" class="content-section">
-                <div class="section-header">
-                    <h2>My Orders</h2>
-                </div>
-                <div class="orders-list-full">
-                    <div class="order-card">
-                        <div class="order-card-header">
-                            <div class="order-basic-info">
-                                <h4>Order #ORD-1001</h4>
-                                <p class="order-date">Placed on Oct 23, 2026</p>
-                            </div>
-                            <span class="status-badge pending">Pending</span>
-                        </div>
-                        <div class="order-card-body">
-                            <div class="order-product-info">
-                                <img src="https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=80&h=80&fit=crop" alt="Kurti">
-                                <div class="product-details">
-                                    <h5>Floral Printed Kurti</h5>
-                                    <p>Seller: <span class="anonymous">Anonymous</span></p>
-                                    <p class="product-price">₹450</p>
-                                </div>
-                            </div>
-                            <div class="order-tracking">
-                                <p><strong>Status:</strong> Order placed, awaiting seller confirmation</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="order-card">
-                        <div class="order-card-header">
-                            <div class="order-basic-info">
-                                <h4>Order #ORD-1002</h4>
-                                <p class="order-date">Placed on Oct 24, 2026</p>
-                            </div>
-                            <span class="status-badge shipped">Shipped</span>
-                        </div>
-                        <div class="order-card-body">
-                            <div class="order-product-info">
-                                <img src="https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=80&h=80&fit=crop" alt="Socks">
-                                <div class="product-details">
-                                    <h5>Cute Polka Dot Socks</h5>
-                                    <p>Seller: <span class="anonymous">Anonymous</span></p>
-                                    <p class="product-price">₹150</p>
-                                </div>
-                            </div>
-                            <div class="order-tracking">
-                                <p><strong>Tracking:</strong> TRK-AB123456</p>
-                                <p><strong>Courier:</strong> Blue Dart</p>
-                                <p><strong>Status:</strong> Shipped - In transit</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Wishlist Section -->
-            <section id="wishlist" class="content-section">
-                <div class="section-header">
-                    <h2>My Wishlist</h2>
-                </div>
-                <div class="products-grid">
-                    <div class="product-card">
-                        <img src="https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=400&h=400&fit=crop" alt="Kurti" class="product-image">
-                        <div class="product-info">
-                            <span class="product-category">Kurtis</span>
-                            <h3 class="product-name">Cotton Anarkali Kurti</h3>
-                            <p class="product-seller"><i class="fas fa-user-secret"></i> Anonymous Seller</p>
-                            <p class="product-price">₹650</p>
-                            <div class="wishlist-actions">
-                                <button class="btn-add-cart" onclick="addToCartFromWishlist(2)">
-                                    <i class="fas fa-shopping-bag"></i> Add to Bag
-                                </button>
-                                <button class="btn-wishlist-remove">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Addresses Section -->
-            <section id="addresses" class="content-section">
-                <div class="section-header">
-                    <h2>Shipping Addresses</h2>
-                    <button class="btn btn-primary">
-                        <i class="fas fa-plus"></i> Add New Address
-                    </button>
-                </div>
-                <div class="addresses-grid">
-                    <div class="address-card">
-                        <div class="address-header">
-                            <h4>Default Address</h4>
-                            <span class="default-badge">Default</span>
-                        </div>
-                        <div class="address-body">
-                            <p><strong>Jane Doe</strong></p>
-                            <p>123, Green Street, Sector 15</p>
-                            <p>Delhi, 110001</p>
-                            <p>Phone: +91 98765 43210</p>
-                        </div>
-                        <div class="address-actions">
-                            <button class="btn-small">Edit</button>
-                            <button class="btn-small">Remove</button>
-                        </div>
-                    </div>
-                </div>
+                <div class="section-header"><h2>My Orders</h2></div>
+                <div class="orders-list-full" id="ordersList"><p class="empty-note">Loading...</p></div>
             </section>
         </main>
     </div>
 
+    <script src="../../js/config.js"></script>
+    <script src="../../js/api.js"></script>
     <script src="customer.js"></script>
 </body>
 </html>

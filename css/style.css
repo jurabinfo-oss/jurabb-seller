@@ -849,3 +849,12 @@ button:focus-visible {
         right: -100%;
     }
 }
+
+/* Empty states (real data only) */
+.empty-products, .empty-note {
+    grid-column: 1 / -1;
+    color: var(--text-gray);
+    font-size: 1rem;
+    padding: 2rem 1rem;
+    text-align: center;
+}

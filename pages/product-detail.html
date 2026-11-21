@@ -89,12 +89,11 @@
                         <div class="seller-avatar-detail" id="sellerAvatar">T</div>
                         <div class="seller-meta">
                             <div class="seller-username" id="sellerUsername"></div>
-                            <div class="seller-points"><i class="fas fa-star"></i> <span id="sellerPoints"></span> Seller Points</div>
+                            <div class="seller-points" id="sellerVerification"></div>
                         </div>
                     </div>
                     <div class="seller-badges">
-                        <span class="badge-pill"><i class="fas fa-check-circle"></i> Verified Seller</span>
-                        <span class="badge-pill"><i class="fas fa-shield-alt"></i> ID Protected</span>
+                        <span class="badge-pill" id="sellerBadge"><i class="fas fa-shield-alt"></i> ID Protected</span>
                     </div>
                     <div style="color: var(--text-gray); font-size: 0.9rem;">
                         <i class="fas fa-info-circle"></i> Buyer's identity hidden. Seller details never shared publicly.
@@ -200,145 +199,178 @@
         </div>
     </div>
 
+    <script src="../js/config.js"></script>
+    <script src="../js/api.js"></script>
     <script src="../js/app.js"></script>
     <script>
         let currentProduct = null;
 
-        function getReviews(sellerId) {
-            const all = JSON.parse(localStorage.getItem('thriftloop_reviews') || '{}');
-            return all[sellerId] || [];
+        const apiBase = () => (window.ThriftLoopAPI && window.ThriftLoopAPI.base) || '';
+        const NO_IMG = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="100%" height="100%" fill="#f3e6ec"/><text x="50%" y="50%" fill="#b23a63" font-family="sans-serif" font-size="22" text-anchor="middle" dominant-baseline="middle">No image yet</text></svg>').replace(/'/g, '%27');
+
+        function esc(value) {
+            return String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
         }
 
-        function renderReviews(sellerId) {
-            const list = document.getElementById('reviewList');
-            const reviews = getReviews(sellerId);
-            if (!reviews.length) {
-                list.innerHTML = '<p style="color:var(--text-gray);">No reviews yet. Be the first to review this seller.</p>';
-                return;
+        function imgUrl(path) {
+            if (!path) return NO_IMG;
+            if (path.startsWith('http') || path.startsWith('data:')) return path;
+            return apiBase() + path;
+        }
+
+        function setText(id, value) {
+            const el = document.getElementById(id);
+            if (el) el.textContent = value;
+        }
+
+        async function loadProduct() {
+            const id = localStorage.getItem('thriftloop_view_product_id');
+            if (!id) { window.location.href = '../index.html'; return; }
+            try {
+                const data = await ThriftLoopAPI.request('/api/products/' + encodeURIComponent(id));
+                currentProduct = data.product;
+                renderProduct();
+                loadReviews();
+                loadMoreFromSeller();
+            } catch (e) {
+                alert('Product not available.');
+                window.location.href = '../index.html';
             }
-            list.innerHTML = reviews.map(r => `
-                <div class="review-item">
-                    <div class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5-r.rating)}</div>
-                    <p>${r.text}</p>
-                    <p style="color:var(--text-gray); font-size:0.85rem; margin-top:0.3rem;">- ${r.by} • ${r.date}</p>
-                </div>
-            `).join('');
         }
 
-        function submitReview() {
+        function renderProduct() {
+            const p = currentProduct;
+            const image = document.getElementById('detailImage');
+            image.src = imgUrl(p.image_path);
+            image.alt = p.name;
+            image.onerror = () => { image.src = NO_IMG; };
+            setText('detailCategory', p.category);
+            setText('detailTitle', p.name);
+            setText('detailPrice', Number(p.price || 0).toLocaleString('en-IN'));
+            setText('sellerUsername', (p.seller && p.seller.seller_code) || 'ThriftLoop Seller');
+            setText('sellerVerification', 'Seller identity protected');
+            setText('sellerBadge', 'ID Protected');
+            setText('sellerAvatar', ((p.seller && p.seller.seller_code) || 'T').slice(0, 1));
+            setText('detailCondition', p.condition || 'Not specified');
+            setText('detailDelivery', 'ThriftLoop delivery');
+            setText('sellerId', (p.seller && p.seller.seller_code) || '-');
+            setText('detailCat', p.category);
+        }
+
+        async function loadReviews() {
+            const list = document.getElementById('reviewList');
             if (!currentProduct) return;
-            const rating = parseInt(document.getElementById('reviewRating').value);
+            try {
+                const data = await ThriftLoopAPI.request('/api/sellers/' + currentProduct.seller_user_id + '/reviews');
+                const reviews = data.reviews || [];
+                list.innerHTML = reviews.length
+                    ? reviews.map(r => `
+                        <div class="review-item">
+                            <div class="review-stars">${'★'.repeat(r.rating)}${'☆'.repeat(5 - r.rating)}</div>
+                            <p>${esc(r.text)}</p>
+                            <p style="color:var(--text-gray); font-size:0.85rem; margin-top:0.3rem;">${new Date(r.created_at).toLocaleDateString('en-IN')}</p>
+                        </div>`).join('')
+                    : '<p class="empty-note">No reviews yet. Be the first to review this seller.</p>';
+            } catch (e) {
+                list.innerHTML = '<p class="empty-note">Could not load reviews.</p>';
+            }
+        }
+
+        async function submitReview() {
+            if (!currentProduct) return;
+            const rating = parseInt(document.getElementById('reviewRating').value, 10);
             const text = document.getElementById('reviewText').value.trim();
             if (!text) { alert('Please write a review'); return; }
-            const all = JSON.parse(localStorage.getItem('thriftloop_reviews') || '{}');
-            const key = currentProduct.sellerId;
-            if (!all[key]) all[key] = [];
-            all[key].unshift({ rating, text, by: 'Buyer', date: new Date().toLocaleDateString() });
-            localStorage.setItem('thriftloop_reviews', JSON.stringify(all));
-            document.getElementById('reviewText').value = '';
-            renderReviews(key);
-            alert('Review submitted!');
+            try {
+                await ThriftLoopAPI.request('/api/sellers/' + currentProduct.seller_user_id + '/reviews', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rating, text })
+                });
+                document.getElementById('reviewText').value = '';
+                loadReviews();
+                alert('Review submitted!');
+            } catch (e) {
+                alert('Could not submit review: ' + (e.message || 'backend unavailable'));
+            }
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            const productData = localStorage.getItem('thriftloop_view_product');
-            if (!productData) {
-                window.location.href = '../index.html';
-                return;
+        async function loadMoreFromSeller() {
+            const grid = document.getElementById('moreFromSeller');
+            if (!currentProduct || !grid) return;
+            try {
+                const data = await ThriftLoopAPI.request('/api/products');
+                const more = (data.products || []).filter(p => p.seller_user_id === currentProduct.seller_user_id && p.id !== currentProduct.id).slice(0, 4);
+                grid.innerHTML = more.length
+                    ? more.map(p => `
+                        <div class="product-card" style="cursor:pointer" onclick="localStorage.setItem('thriftloop_view_product_id','${p.id}'); location.reload();">
+                            <img src="${esc(imgUrl(p.image_path))}" class="product-image" data-fallback="${NO_IMG}" onerror="this.onerror=null;this.src=this.dataset.fallback">
+                            <div class="product-info">
+                                <h3 class="product-name">${esc(p.name)}</h3>
+                                <p class="product-price">₹${Number(p.price || 0).toLocaleString('en-IN')}</p>
+                            </div>
+                        </div>`).join('')
+                    : '<p class="empty-note">No other listings from this seller.</p>';
+            } catch (e) {
+                grid.innerHTML = '<p class="empty-note">Could not load listings.</p>';
             }
-            const product = JSON.parse(productData);
-            currentProduct = product;
-            
-            document.getElementById('detailImage').src = product.image.startsWith('http') ? product.image : '../' + product.image;
-            document.getElementById('detailImage').alt = product.name;
-            document.getElementById('detailCategory').textContent = product.category;
-            document.getElementById('detailTitle').textContent = product.name;
-            document.getElementById('detailPrice').textContent = product.price;
-            document.getElementById('sellerUsername').textContent = product.seller;
-            document.getElementById('sellerPoints').textContent = product.sellerPoints;
-            document.getElementById('sellerAvatar').textContent = product.seller.charAt(0).toUpperCase();
-            document.getElementById('detailCondition').textContent = product.condition || 'Good';
-            document.getElementById('detailDelivery').textContent = product.deliveryType || 'Pickup/Delivery';
-            document.getElementById('sellerId').textContent = product.sellerId || 'N/A';
-            document.getElementById('detailCat').textContent = product.category;
-            
-            renderReviews(product.sellerId);
+        }
 
-            // Show more from same seller
-            const moreGrid = document.getElementById('moreFromSeller');
-            if (typeof products !== 'undefined') {
-                products.filter(p => p.sellerId === product.sellerId && p.id !== product.id).slice(0, 4).forEach(p => {
-                    const card = document.createElement('div');
-                    card.className = 'product-card';
-                    card.style.cursor = 'pointer';
-                    card.onclick = () => {
-                        localStorage.setItem('thriftloop_view_product', JSON.stringify(p));
-                        location.reload();
-                    };
-                    card.innerHTML = `
-                        <img src="${p.image.startsWith('http') ? p.image : '../' + p.image}" class="product-image">
-                        <div class="product-info">
-                            <h3 class="product-name">${p.name}</h3>
-                            <p class="product-price">₹${p.price}</p>
-                        </div>
-                    `;
-                    moreGrid.appendChild(card);
-                });
-            }
-        });
-        
         function openBuyModal() {
             if (!currentProduct) return;
-            document.getElementById('modalSellerName').textContent = currentProduct.seller + ' (' + currentProduct.sellerId + ')';
+            setText('modalSellerName', (currentProduct.seller && currentProduct.seller.seller_code) || 'Seller');
+            setText('sellerBadge', 'ID Protected');
             const pfp = document.getElementById('modalSellerPfp');
-            // pfp reveal once - if seller has image show it, else show placeholder
-            if (currentProduct.sellerPfp) {
-                pfp.innerHTML = '<img src="' + (currentProduct.sellerPfp.startsWith('http') ? currentProduct.sellerPfp : '../' + currentProduct.sellerPfp) + '" alt="Seller">';
+            const photo = currentProduct.seller && currentProduct.seller.photo_path;
+            if (photo) {
+                pfp.innerHTML = '<img src="' + esc(imgUrl(photo)) + '" alt="Seller">';
             } else {
-                pfp.textContent = currentProduct.seller.charAt(0).toUpperCase();
+                pfp.textContent = ((currentProduct.seller && currentProduct.seller.seller_code) || 'S').slice(0, 1);
             }
+            setText('sellerAvatar', ((currentProduct.seller && currentProduct.seller.seller_code) || 'T').slice(0, 1));
             document.getElementById('buyModal').classList.add('active');
-            localStorage.setItem('thriftloop_pfp_viewed_' + currentProduct.sellerId, '1');
+            localStorage.setItem('thriftloop_pfp_viewed_' + currentProduct.seller_user_id, '1');
         }
 
         function closeBuyModal() {
             document.getElementById('buyModal').classList.remove('active');
         }
 
-        function confirmPurchase() {
-            const deliveryAddress = document.getElementById('deliveryAddress').value.trim();
-            const buyerPhone = document.getElementById('buyerPhone').value.trim();
-            if (!deliveryAddress) { alert('Please enter your delivery address'); return; }
-            if (!buyerPhone) { alert('Please enter your phone number for delivery coordination'); return; }
-            const deliveryTime = document.getElementById('deliveryTime').value;
-            const note = document.getElementById('buyerNote').value.trim();
-
-            // Save demo order for coordination flow
-            const orders = JSON.parse(localStorage.getItem('thriftloop_orders') || '[]');
-            orders.unshift({
-                id: 'ORD-' + Date.now().toString().slice(-6),
-                productId: currentProduct?.id,
-                productName: currentProduct?.name,
-                sellerId: currentProduct?.sellerId,
-                sellerName: currentProduct?.seller,
-                buyerDeliveryAddress: deliveryAddress,
-                buyerPhone,
-                deliveryTime,
-                note,
-                status: 'Requested - Awaiting Seller Handover',
-                createdAt: new Date().toISOString()
-            });
-            localStorage.setItem('thriftloop_orders', JSON.stringify(orders));
-
-            alert('Order request confirmed!\n\nDelivery to: ' + deliveryAddress + '\nPreferred time: ' + deliveryTime + '\n\nSeller will hand over the parcel to ThriftLoop at their nearby handover location. We will receive it and deliver to you.');
-            closeBuyModal();
+        async function confirmPurchase() {
+            if (!currentProduct) return;
+            if (!localStorage.getItem('thriftloop_token') || localStorage.getItem('thriftloop_user_type') !== 'customer') {
+                alert('Please login as a buyer before placing an order.');
+                window.location.href = '../index.html';
+                return;
+            }
+            const address = document.getElementById('deliveryAddress').value.trim();
+            const phone = document.getElementById('buyerPhone').value.trim();
+            if (!address) { alert('Please enter your delivery address'); return; }
+            if (!phone) { alert('Please enter your phone number for delivery coordination'); return; }
+            try {
+                await ThriftLoopAPI.request('/api/orders', {
+                    method: 'POST',
+                    headers: ThriftLoopAPI.authHeaders({ 'Content-Type': 'application/json' }),
+                    body: JSON.stringify({
+                        product_id: currentProduct.id,
+                        buyer_delivery_address: address,
+                        buyer_phone: phone,
+                        preferred_delivery_time: document.getElementById('deliveryTime').value,
+                        note: document.getElementById('buyerNote').value.trim()
+                    })
+                });
+                alert('Order request confirmed. Seller will hand over the parcel to ThriftLoop, and we will deliver it to your address.');
+                closeBuyModal();
+            } catch (e) {
+                alert('Could not place order: ' + (e.message || 'backend unavailable'));
+            }
         }
-        
+
         function addToCartDetail() {
-            const productData = localStorage.getItem('thriftloop_view_product');
-            const product = JSON.parse(productData);
-            if (typeof addToCart === 'function') addToCart(product.id);
+            if (currentProduct && typeof addToCart === 'function') addToCart(currentProduct.id);
         }
+
+        document.addEventListener('DOMContentLoaded', loadProduct);
     </script>
 </body>
 </html>
