@@ -44,14 +44,15 @@ A modern, professional UI/UX thrift store website for selling pre-loved kurtis a
 - **HTML5** - Semantic markup
 - **CSS3** - Modern styling with CSS variables, soft shadows, transitions
 - **Vanilla JavaScript** - No frameworks, pure JS
-- **Python backend (MVP)** - `backend/` uses Python stdlib + SQLite (no external packages)
+- **Python backend** - `backend/` uses Python stdlib with SQLite locally and PostgreSQL in production
 - **Font Awesome** - Icons
 - **Google Fonts (Poppins)** - Typography
 
 ## Backend (MVP)
 
-The `backend/` folder contains a Python + SQLite API for real accounts, admin-managed
-seller invites, invite-gated seller signup with photo upload, products, orders, and reviews.
+The `backend/` folder contains a Python API for real accounts, admin-managed seller
+invites, invite-gated seller signup with photo upload, products, orders, and reviews.
+It uses SQLite locally and PostgreSQL when `DATABASE_URL` is set (Render Postgres).
 
 ```bash
 cd backend
@@ -62,8 +63,10 @@ python3 server.py
 - Admin (auto-created on first run): `admin@thriftloop.com` / `admin123`
   (override with `THRIFTLOOP_ADMIN_EMAIL` / `THRIFTLOOP_ADMIN_PASSWORD`; the env value
   also resets the password on restart)
-- Data: `backend/data/thriftloop.db`
-- Uploaded seller photos: `backend/uploads/`
+- Local data: `backend/data/thriftloop.db`; local uploads: `backend/uploads/`
+- Production: set `DATABASE_URL` to a Postgres connection string. Accounts, orders,
+  products and uploaded images are then stored in Postgres so they survive Render
+  sleep/restarts (a Free Render web service has no persistent disk).
 
 See `backend/README.md` for the full API list.
 
@@ -99,10 +102,10 @@ SweetSite/
 │   └── style.css       # Main styles
 ├── backend/
 │   ├── server.py       # Python HTTP API
-│   ├── db.py           # SQLite schema/connection
+│   ├── db.py           # SQLite/Postgres schema + connection adapter
 │   ├── auth.py         # Password hashing/session helpers
-│   ├── data/           # SQLite database (created on run)
-│   └── uploads/        # Uploaded seller photos
+│   ├── data/           # Local SQLite database (created on run)
+│   └── uploads/        # Local uploaded seller photos
 ├── pages/
 │   ├── admin/          # Admin dashboard
 │   ├── seller/         # Seller dashboard + signup

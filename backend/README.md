@@ -1,10 +1,10 @@
 # ThriftLoop Backend (MVP)
 
-Python stdlib + SQLite backend for the ThriftLoop demo site.
+Python backend for ThriftLoop. Uses SQLite locally and PostgreSQL in production.
 
 ## Requirements
 - Python 3.10+
-- No external packages required (uses `sqlite3`, `http.server`)
+- `pip install -r requirements.txt` (installs the PostgreSQL driver when deploying)
 
 ## Run locally
 
@@ -19,8 +19,12 @@ Environment variables:
 - `PORT` (default `3001`)
 - `THRIFTLOOP_ADMIN_EMAIL` (default `admin@thriftloop.com`)
 - `THRIFTLOOP_ADMIN_PASSWORD` (default `admin123`)
+- `DATABASE_URL` - Postgres connection string. When set, all data and uploaded
+  images are stored in Postgres instead of local files. This is required on Render,
+  where Free web services lose their local filesystem on sleep/restart/redeploy.
 
-Data is stored in `backend/data/thriftloop.db`. Uploaded photos go to `backend/uploads/`.
+Without `DATABASE_URL`, data is stored in `backend/data/thriftloop.db` and uploaded
+photos go to `backend/uploads/`.
 
 ## Implemented API (MVP)
 
@@ -59,7 +63,7 @@ Data is stored in `backend/data/thriftloop.db`. Uploaded photos go to `backend/u
 - `POST /api/sellers/:sellerUserId/reviews` `{ rating, text, order_id? }`
 
 ### Uploads
-- `GET /uploads/<filename>` serves uploaded seller/product images
+- `GET /uploads/<filename>` serves uploaded seller/product images (from Postgres when `DATABASE_URL` is set)
 
 ## Admin / seller list endpoints
 - `GET /api/admin/summary`, `/api/admin/users`, `/api/admin/sellers`, `/api/admin/products`

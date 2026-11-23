@@ -3,13 +3,17 @@ import os
 import re
 import secrets
 from datetime import datetime, timezone
+from decimal import Decimal
 from email.parser import BytesParser
 from email.policy import default as email_default
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse, parse_qs
 from pathlib import Path
 
-from db import get_conn, init_db, BASE_DIR
+from db import (
+    get_conn, init_db, BASE_DIR,
+    USING_POSTGRES, store_upload, read_upload,
+)
 from auth import hash_password, verify_password, create_session_token, session_expiry, now_iso, is_expired
 
 UPLOAD_DIR = Path(os.environ.get("THRIFTLOOP_UPLOAD_DIR", str(BASE_DIR / "uploads")))
@@ -20,7 +24,10 @@ ADMIN_PASSWORD = os.environ.get("THRIFTLOOP_ADMIN_PASSWORD", "admin123")
 
 
 def json_response(handler, status, data):
-    body = json.dumps(data).encode("utf-8")
+    body = json.dumps(
+        data,
+        default=lambda o: float(o) if isinstance(o, Decimal) else str(o),
+    ).encode("utf-8")
     handler.send_response(status)
     handler.send_header("Content-Type", "application/json; charset=utf-8")
     handler.send_header("Content-Length", str(len(body)))
@@ -145,17 +152,25 @@ def parse_multipart(handler):
     return fields, files
 
 
-def save_upload_bytes(data, filename, prefix="file"):
+def save_upload_bytes(data, filename, prefix="file", content_type=None):
     if not data or not filename:
         return None
     base = os.path.basename(filename)
-    ext = os.path.splitext(base)[1].lower() or ".jpg"
     safe = re.sub(r"[^a-zA-Z0-9._-]", "_", base)
     name = f"{prefix}_{secrets.token_hex(8)}_{safe}"
-    path = UPLOAD_DIR / name
-    with open(path, "wb") as f:
-        f.write(data)
-    return f"/uploads/{name}"
+    public_path = f"/uploads/{name}"
+
+    if USING_POSTGRES:
+        # Free Render web services have an ephemeral filesystem. Store the
+        # image in Postgres so it survives sleep/restart/redeploy.
+        ctype = content_type or "application/octet-stream"
+        store_upload(public_path, data, ctype)
+    else:
+        path = UPLOAD_DIR / name
+        with open(path, "wb") as f:
+            f.write(data)
+
+    return public_path
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -512,7 +527,11 @@ class Handler(BaseHTTPRequestHandler):
                     (email, hash_password(password), "seller", full_name, now_iso()),
                 )
                 uid = cur.lastrowid
-                photo_path = save_upload_bytes(photo["data"], photo["filename"], prefix=f"seller_{uid}")
+                photo_path = save_upload_bytes(
+                    photo["data"], photo["filename"],
+                    prefix=f"seller_{uid}",
+                    content_type=photo.get("content_type"),
+                )
                 seller_code = "SELL-" + secrets.token_hex(4).upper()
                 cur.execute(
                     """INSERT INTO seller_profiles
@@ -648,7 +667,11 @@ class Handler(BaseHTTPRequestHandler):
             if not name or category not in allowed or price <= 0:
                 return json_response(self, 400, {"error": "Name, valid category and price required"})
             image = files.get("image")
-            image_path = save_upload_bytes(image["data"], image["filename"], prefix="product") if image else None
+            image_path = save_upload_bytes(
+                image["data"], image["filename"],
+                prefix="product",
+                content_type=image.get("content_type"),
+            ) if image else None
             conn = get_conn()
             cur = conn.cursor()
             cur.execute(
@@ -689,28 +712,36 @@ class Handler(BaseHTTPRequestHandler):
 
     def serve_upload(self, path):
         # path like /uploads/filename
-        rel = path.lstrip("/")
-        fs_path = BASE_DIR / rel
-        try:
-            fs_path = fs_path.resolve()
-            if UPLOAD_DIR.resolve() not in fs_path.parents and fs_path != UPLOAD_DIR.resolve():
-                return json_response(self, 403, {"error": "Forbidden"})
-            if not fs_path.exists() or not fs_path.is_file():
+        if USING_POSTGRES:
+            record = read_upload(path)
+            if not record:
                 return json_response(self, 404, {"error": "Not found"})
-            data = fs_path.read_bytes()
-            ext = fs_path.suffix.lower()
-            ctype = {
-                ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
-                ".gif": "image/gif", ".webp": "image/webp",
-            }.get(ext, "application/octet-stream")
-            self.send_response(200)
-            self.send_header("Content-Type", ctype)
-            self.send_header("Content-Length", str(len(data)))
-            self.send_header("Access-Control-Allow-Origin", "*")
-            self.end_headers()
-            self.wfile.write(data)
-        except Exception:
-            return json_response(self, 404, {"error": "Not found"})
+            data = bytes(record["data"])
+            ctype = record["content_type"] or "application/octet-stream"
+        else:
+            name = path.rsplit("/", 1)[-1]
+            fs_path = UPLOAD_DIR / name
+            try:
+                fs_path = fs_path.resolve()
+                if UPLOAD_DIR.resolve() not in fs_path.parents:
+                    return json_response(self, 403, {"error": "Forbidden"})
+                if not fs_path.exists() or not fs_path.is_file():
+                    return json_response(self, 404, {"error": "Not found"})
+                data = fs_path.read_bytes()
+                ext = fs_path.suffix.lower()
+                ctype = {
+                    ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
+                    ".gif": "image/gif", ".webp": "image/webp",
+                }.get(ext, "application/octet-stream")
+            except Exception:
+                return json_response(self, 404, {"error": "Not found"})
+
+        self.send_response(200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(data)))
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.end_headers()
+        self.wfile.write(data)
 
 
 def run(host="0.0.0.0", port=3001):

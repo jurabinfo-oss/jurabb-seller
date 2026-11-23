@@ -1,2 +1,3 @@
-# ThriftLoop backend has no third-party Python dependencies.
-# This file exists so hosts like Render detect the project as a Python service.
+# PostgreSQL driver. Used only when DATABASE_URL is set (Render Postgres).
+# Local development without DATABASE_URL keeps using Python's sqlite3.
+psycopg2-binary>=2.9.9
