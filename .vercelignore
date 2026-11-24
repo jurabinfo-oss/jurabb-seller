@@ -1,0 +1,8 @@
+# Backend stays on Render. Vercel hosts the static frontend only.
+backend/
+*.zip
+render.yaml
+README.md
+Jurrab_Seller_Guide.pdf
+__pycache__/
+**/__pycache__/
